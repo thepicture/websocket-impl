@@ -1,0 +1,16 @@
+{
+  "name": "websocket-impl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index",
+    "test": "npx jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jest": "^29.4.2"
+  }
+}
