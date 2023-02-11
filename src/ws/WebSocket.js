@@ -37,7 +37,6 @@ class WebSocket {
           );
           const command = buffer.toString("utf-8");
           try {
-            console.log(command);
             this._respond(socket, this._getResponse(command));
           } catch {
             this._respond(socket, "command not found");

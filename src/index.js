@@ -2,10 +2,10 @@ const { WebSocket } = require("./ws/WebSocket");
 
 const websocket = new WebSocket();
 
-const { argv } = process;
+const args = process.argv.slice(2);
 
-for (let i = 0; i < argv.slice(2).length; i += 2) {
-  websocket.addCommand(argv[i], argv[i + 1]);
+for (let i = 0; i < args.length; i += 2) {
+  websocket.addCommand(args[i], args[i + 1]);
 }
 
 websocket.open();
