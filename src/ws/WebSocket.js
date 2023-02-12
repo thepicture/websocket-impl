@@ -1,5 +1,8 @@
 const net = require("node:net");
+
 const crypto = require("node:crypto");
+
+const { exec } = require("node:child_process");
 
 const ACCEPT_HASH = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
@@ -17,7 +20,7 @@ class WebSocket {
 
   async open() {
     this.server = net.createServer((socket) => {
-      const readData = (data) => {
+      const readData = async (data) => {
         const content = data.toString("utf-8");
         if (content.includes("GET / HTTP/1.1")) {
           socket.write("HTTP/1.1 101 Switching Protocols\r\n");
@@ -37,8 +40,8 @@ class WebSocket {
           );
           const command = buffer.toString("utf-8");
           try {
-            this._respond(socket, this._getResponse(command));
-          } catch {
+            this._respond(socket, await this._getResponse(command));
+          } catch (error) {
             this._respond(socket, "command not found");
           }
         }
@@ -81,8 +84,23 @@ class WebSocket {
       .digest("base64");
   }
 
-  _getResponse(command) {
-    return this.cases[command];
+  async _getResponse(command) {
+    const response = this.cases[command];
+    const match = response.match(/\$\((.+)\)/);
+
+    if (match) {
+      return await new Promise((resolve, reject) => {
+        exec(response, (error, stdout, stderr) => {
+          if (error || stderr) {
+            reject(error || stderr);
+          } else {
+            resolve(`${stdout.slice(0, -1)}`);
+          }
+        });
+      });
+    } else {
+      return response;
+    }
   }
 
   _respond(socket, message) {
