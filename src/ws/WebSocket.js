@@ -33,16 +33,72 @@ class WebSocket {
           );
         } else {
           const array = [...data];
-          const MASK = array.slice(2, 6);
-          const ENCODED = array.slice(6, -1);
-          const buffer = Buffer.from(
-            Uint8Array.from(ENCODED, (e, i) => e ^ MASK[i % 4])
-          );
-          const command = buffer.toString("utf-8");
-          try {
-            this._respond(socket, await this._getResponse(command));
-          } catch (error) {
-            this._respond(socket, "command not found");
+
+          const first24Bits = array
+            .slice(0, 3)
+            .map((value) => value.toString(2).padStart(8, "0"))
+            .join("");
+
+          const length = parseInt(first24Bits.slice(9, 15 + 1), 2);
+
+          if (length <= 125) {
+            const encoded = array.slice(6, 6 + length);
+            const mask = array.slice(2, 6);
+            const buffer = Buffer.from(
+              Uint8Array.from(encoded, (e, i) => e ^ mask[i % 4])
+            );
+
+            const command = buffer.toString("utf-8");
+
+            try {
+              this._respond(socket, await this._getResponse(command));
+            } catch (error) {
+              this._respond(socket, "command not found");
+            }
+          } else if (length === 126) {
+            const next16Bits = array
+              .slice(3, 5)
+              .map((value) => value.toString(2).padStart(8, "0"))
+              .join("");
+
+            const extendedLength = parseInt(next16Bits, 2);
+
+            const encoded = array.slice(8, 8 + extendedLength);
+            const mask = array.slice(4, 8);
+
+            const buffer = Buffer.from(
+              Uint8Array.from(encoded, (e, i) => e ^ mask[i % 4])
+            );
+
+            const command = buffer.toString("utf-8");
+
+            try {
+              this._respond(socket, await this._getResponse(command));
+            } catch (error) {
+              this._respond(socket, "command not found");
+            }
+          } else {
+            const next64Bits = array
+              .slice(4, 4 + 8)
+              .map((value) => value.toString(2).padStart(8, "0"))
+              .join("");
+
+            const extendedLength = parseInt(next64Bits, 2);
+
+            const encoded = array.slice(14, 14 + extendedLength);
+            const mask = array.slice(10, 10 + 4);
+
+            const buffer = Buffer.from(
+              Uint8Array.from(encoded, (e, i) => e ^ mask[i % 4])
+            );
+
+            const command = buffer.toString("utf-8");
+
+            try {
+              this._respond(socket, await this._getResponse(command));
+            } catch (error) {
+              this._respond(socket, "command not found");
+            }
           }
         }
       };
@@ -94,7 +150,7 @@ class WebSocket {
           if (error || stderr) {
             reject(error || stderr);
           } else {
-            resolve(`${stdout.slice(0, -1)}`);
+            resolve(stdout);
           }
         });
       });
