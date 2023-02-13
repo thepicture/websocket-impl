@@ -1,6 +1,6 @@
 {
   "name": "websocket-impl",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "",
   "main": "src/index.js",
   "scripts": {
@@ -12,5 +12,8 @@
   "license": "ISC",
   "dependencies": {
     "jest": "^29.4.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.4.0"
   }
 }
