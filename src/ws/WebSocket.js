@@ -56,12 +56,11 @@ class WebSocket {
               this._respond(socket, "command not found");
             }
           } else if (length === 126) {
-            const next16Bits = array
-              .slice(3, 5)
-              .map((value) => value.toString(2).padStart(8, "0"))
-              .join("");
-
-            const extendedLength = parseInt(next16Bits, 2);
+            const extendedLength = new DataView(
+              data.buffer,
+              data.byteOffset + 2,
+              2
+            ).getUint16(0, false);
 
             const encoded = array.slice(8, 8 + extendedLength);
             const mask = array.slice(4, 8);
@@ -78,14 +77,13 @@ class WebSocket {
               this._respond(socket, "command not found");
             }
           } else {
-            const next64Bits = array
-              .slice(4, 4 + 8)
-              .map((value) => value.toString(2).padStart(8, "0"))
-              .join("");
+            const extendedLength = new DataView(
+              data.buffer,
+              data.byteOffset + 2,
+              8
+            ).getBigUint64(0, false);
 
-            const extendedLength = parseInt(next64Bits, 2);
-
-            const encoded = array.slice(14, 14 + extendedLength);
+            const encoded = array.slice(14, 14 + Number(extendedLength));
             const mask = array.slice(10, 10 + 4);
 
             const buffer = Buffer.from(
