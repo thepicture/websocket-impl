@@ -123,11 +123,8 @@ class WebSocket {
   }
 
   async close() {
-    await new Promise((resolve, reject) => {
-      this.server.on("close", resolve);
-      this.server.on("error", reject);
-
-      this.server.close();
+    await new Promise((resolve) => {
+      this.server.close(resolve);
     });
   }
 
